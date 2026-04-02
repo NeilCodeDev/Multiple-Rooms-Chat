@@ -12,3 +12,12 @@ const client = net.connect(PORT, HOST, () => {
 client.on("error", (error) => {
     console.error('client error: ', error.message)
 })
+
+client.on("data", (data) => {
+    console.log(data.toString())
+})
+
+process.stdin.on("data", (data) => {
+    client.write(data.toString())
+
+})
