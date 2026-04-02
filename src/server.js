@@ -4,6 +4,7 @@ import 'dotenv/config'
 import { v4 as uuidv4 } from 'uuid';
 
 import configObject from './config.js';
+import checkUserInput from './utils/checkUserInput.js';
 
 const PORT = process.env.PORT
 const { defaultRoomsNumber, defaultRoomSize } = configObject
@@ -30,6 +31,8 @@ const server = net.createServer((socket) => {
     state.userGlobalArray.push(socket)
 
     socket.on("data", (data) => {
+        if (!checkUserInput(data, state, socket)) return
+
         if (!socket.room) {
             const userData = data.toString().trim()
             const userRoom = state.roomsObj[`room${userData}`]
