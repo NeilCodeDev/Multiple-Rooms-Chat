@@ -3,36 +3,39 @@ import net from 'net'
 import 'dotenv/config'
 import { v4 as uuidv4 } from 'uuid';
 
+import configObject from './config.js';
+
 const PORT = process.env.PORT
+const { defaultRoomsNumber, defaultRoomSize } = configObject
 
-const defaulRoomsNumber = 5;
-const defaultRoomSize = 2;
-let userGlobalArray = [];
-let roomsObj = {}
+let state = {
+    userGlobalArray: [],
+    roomsObj: {}
+}
 
-for (let i = 1; i < defaulRoomsNumber + 1; i++) {
-    roomsObj[`room${i}`] = {
+for (let i = 1; i < defaultRoomsNumber + 1; i++) {
+    state.roomsObj[`room${i}`] = {
         maxUsers: defaultRoomSize,
         roomUsersArray: []
     }
 }
 
-console.log(roomsObj)
+console.log(state.roomsObj)
 
 const server = net.createServer((socket) => {
     const uuid = uuidv4();
     socket.id = uuid
     console.log("client joined")
 
-    userGlobalArray.push(socket)
+    state.userGlobalArray.push(socket)
 
     socket.on("data", (data) => {
         if (!socket.room) {
             const userData = data.toString().trim()
-            const userRoom = roomsObj[`room${userData}`]
+            const userRoom = state.roomsObj[`room${userData}`]
             socket.room = userRoom
             userRoom.roomUsersArray.push(socket)
-            console.log(roomsObj)
+            console.log(state.roomsObj)
         } else {
             const msg = data.toString().trim()
             const room = socket.room.roomUsersArray
