@@ -5,6 +5,7 @@ import { v4 as uuidv4 } from 'uuid';
 
 import configObject from './config.js';
 import checkUserInput from './utils/checkUserInput.js';
+import renderRooms from './utils/renderRooms.js';
 
 const PORT = process.env.PORT
 const { defaultRoomsNumber, defaultRoomSize } = configObject
@@ -23,6 +24,9 @@ for (let i = 1; i < defaultRoomsNumber + 1; i++) {
 
 console.log(state.roomsObj)
 
+// render rooms for user
+renderRooms(state)
+
 
 const server = net.createServer((socket) => {
     const uuid = uuidv4();
@@ -33,25 +37,7 @@ const server = net.createServer((socket) => {
     console.log(state.userGlobalArray.length)
     
 
-    // render rooms for user
-    function renderRooms() {
-        let roomString = ``
-        for (let i = 1; i < Object.keys(state.roomsObj).length + 1; i++) {
-            const roomLength = state.roomsObj[`room${i}`].roomUsersArray.length
-            if (!roomLength == 0){
-                roomString += `room #${i}: ${roomLength} online\n`
-            } else{
-                roomString += `room #${i}: empty\n`
-            }
-        }
-        console.log(roomString)
-
-        state.userGlobalArray.forEach((client) => {
-            client.write(roomString)
-        })
-    }
-
-    renderRooms()
+    renderRooms(state)
 
     socket.on("data", (data) => {
         if (!socket.room) {
@@ -61,6 +47,7 @@ const server = net.createServer((socket) => {
             socket.room = userRoom
             userRoom.roomUsersArray.push(socket)
             console.log(state.roomsObj)
+            renderRooms(state)
         } else {
             const msg = data.toString().trim()
             const room = socket.room.roomUsersArray
@@ -69,7 +56,6 @@ const server = net.createServer((socket) => {
                 client.write(msg)
             });
         }
-        renderRooms()
     })
 
     socket.on("error", (error) => {
@@ -83,12 +69,14 @@ const server = net.createServer((socket) => {
         })
 
         // clear room array
-        socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
-            return client !== socket
-        })
+        if (socket.room) {
+            socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
+                return client !== socket
+            })
+        }
 
         console.log("client disconnected: ", state.userGlobalArray.length)
-        renderRooms()
+        renderRooms(state)
     })
 })
 
