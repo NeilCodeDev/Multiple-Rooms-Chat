@@ -37,7 +37,7 @@ const server = net.createServer((socket) => {
     console.log(state.userGlobalArray.length)
     
 
-    renderRooms(state)
+    socket.write(renderRooms(state))
 
     socket.on("data", (data) => {
         if (!socket.room) {
@@ -47,9 +47,33 @@ const server = net.createServer((socket) => {
             socket.room = userRoom
             userRoom.roomUsersArray.push(socket)
             console.log(state.roomsObj)
-            renderRooms(state)
+
+
+            state.userGlobalArray.forEach((client) => {
+                if (client.room) return
+                client.write(renderRooms(state))
+            })
+
+            socket.write("you joined: room " + userData)
         } else {
             const msg = data.toString().trim()
+
+            if (msg === "/leave") {
+                if (socket.room) {
+                    socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
+                        return client !== socket
+                    })
+                    socket.room = undefined
+
+                    state.userGlobalArray.forEach((client) => {
+                        if (client.room) return
+                        client.write(renderRooms(state))
+                    })
+
+                }
+                return
+            }
+
             const room = socket.room.roomUsersArray
             room.forEach(client => {
                 if (client === socket) return

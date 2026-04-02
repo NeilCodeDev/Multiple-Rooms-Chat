@@ -10,7 +10,8 @@ export default function renderRooms(state) {
         }
     }
     console.log(roomString)
-    state.userGlobalArray.forEach((client) => {
-        client.write(roomString)
-    })
+    // state.userGlobalArray.forEach((client) => {
+    //     client.write(roomString)
+    // })
+    return roomString
 }
