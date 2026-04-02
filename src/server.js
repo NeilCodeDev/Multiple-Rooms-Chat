@@ -53,7 +53,7 @@ const server = net.createServer((socket) => {
             const room = socket.room.roomUsersArray
             room.forEach(client => {
                 if (client === socket) return
-                client.write(msg)
+                client.write("user: " + msg)
             });
         }
     })
