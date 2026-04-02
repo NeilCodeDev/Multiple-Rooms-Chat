@@ -1,0 +1,14 @@
+import net from 'net'
+
+import 'dotenv/config'
+
+const PORT = process.env.PORT
+const HOST = '127.0.0.1'
+
+const client = net.connect(PORT, HOST, () => {
+    console.log("connected to server")
+})
+
+client.on("error", (error) => {
+    console.error('client error: ', error.message)
+})

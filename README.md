@@ -9,4 +9,5 @@ A TCP chat that allows people to join different rooms and message each other
 
 ## Current Status
 - [X] initial setup
-- [ ] basic server & client connection
+- [X] basic server & client connection
+- [ ] socket distribution in different rooms logic
