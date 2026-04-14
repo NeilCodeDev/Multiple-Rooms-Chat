@@ -2,7 +2,7 @@ import net from 'net'
 
 import 'dotenv/config'
 
-const PORT = process.env.PORT
+const PORT = process.env.PORT || 9000
 const HOST = '127.0.0.1'
 
 const client = net.connect(PORT, HOST, () => {

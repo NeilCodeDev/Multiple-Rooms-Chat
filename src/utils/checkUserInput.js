@@ -1,5 +1,5 @@
 export default function checkUserInput(data, state, socket) {
-    const msg =Number(data.toString().trim())
+    const msg = Number(data.toString().trim())
     if (Number.isNaN(msg) ||
         msg > Object.keys(state.roomsObj).length ||
         msg < 1) {

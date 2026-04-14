@@ -15,6 +15,7 @@ let state = {
     roomsObj: {}
 }
 
+
 for (let i = 1; i < defaultRoomsNumber + 1; i++) {
     state.roomsObj[`room${i}`] = {
         maxUsers: defaultRoomSize,
@@ -39,11 +40,21 @@ const server = net.createServer((socket) => {
 
     socket.write(renderRooms(state))
 
+    ////---------------------------------------------------------////////////
+
     socket.on("data", (data) => {
         if (!socket.room) {
             if (!checkUserInput(data, state, socket)) return
             const userData = data.toString().trim()
             const userRoom = state.roomsObj[`room${userData}`]
+
+            //check if room is full
+            if (userRoom.roomUsersArray.length >= userRoom.maxUsers) {
+                socket.write("\nThe room is full, try another one\n")
+                socket.write(renderRooms(state))
+                return
+            }
+
             socket.room = userRoom
             userRoom.roomUsersArray.push(socket)
             console.log(state.roomsObj)
