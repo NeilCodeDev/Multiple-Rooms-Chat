@@ -22,6 +22,6 @@ export default function renderRooms(state) {
             roomString += `room #${i} ${roomName}: ${roomLength}/${roomMaxUsers}\n`
         }
     }
-    console.log(roomString)
+    console.log(roomString) 
     return roomString
 }

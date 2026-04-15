@@ -24,6 +24,15 @@ function renderRoomsLobby() {
     })
 }
 
+function sameRoomMessage(socket, message) {
+    const room = socket.room.roomUsersArray
+
+    room.forEach(client => {
+        if (client === socket) return
+        client.write(`${socket.username}${message}`)
+    });
+}
+
 
 for (let i = 1; i < defaultRoomsNumber + 1; i++) {
     state.roomsObj[`room${i}`] = {
@@ -113,36 +122,37 @@ const server = net.createServer((socket) => {
             })
 
             socket.write("you joined: room " + userData)
+
+            sameRoomMessage(socket, " has joined!")
+
         } else {
             const msg = data.toString().trim()
-
             if (msg === "/leave") {
                 if (socket.room) {
+                    sameRoomMessage(socket, " left")
+
                     socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
                         return client !== socket
                     })
                     socket.room = undefined
 
                 renderRoomsLobby()
-
                 }
                 return
             }
 
-            const room = socket.room.roomUsersArray
-            room.forEach(client => {
-                if (client === socket) return
-                client.write(`${socket.username}: ` + msg)
-            });
+            sameRoomMessage(socket, ": " + msg)
         }
     })
 
     socket.on("error", (error) => {
         console.error("Server Error: ", error.message)
     })
-
+    
     socket.on("close", () => {
         //clear global array
+        if (socket.room) sameRoomMessage(socket, " left")
+
         state.userGlobalArray = state.userGlobalArray.filter((client) => {
             return client !== socket
         })
