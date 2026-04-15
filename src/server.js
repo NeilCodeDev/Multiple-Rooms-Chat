@@ -57,7 +57,7 @@ const server = net.createServer((socket) => {
                 try {
                     const userInput = JSON.parse(data.toString())
 
-                    if (validateRoomCommand(userInput)) return socket.write(`Error: ${validateRoomCommand(userInput)}`)
+                    if (validateRoomCommand(userInput)) return socket.write(`Error server: ${validateRoomCommand(userInput)}`)
 
                     const roomNumber = Object.keys(state.roomsObj).length + 1
                     state.roomsObj[`room${roomNumber}`] = {
@@ -71,7 +71,7 @@ const server = net.createServer((socket) => {
                     return
 
                 } catch(error) {
-                    console.error("Error: ", error)
+                    console.error("Error: ", error.message)
                 }
 
             }

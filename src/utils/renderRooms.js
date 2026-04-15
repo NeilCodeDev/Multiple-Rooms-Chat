@@ -7,9 +7,9 @@ export default function renderRooms(state) {
         const roomName = state.roomsObj[`room${i}`].roomName ? `(${state.roomsObj[`room${i}`].roomName})` : ""
 
         if (roomLength > 0) {
-            roomString += `room #${i}${roomName}: ${roomLength}/${roomMaxUsers} online\n`
+            roomString += `room #${i} ${roomName}: ${roomLength}/${roomMaxUsers} online\n`
         } else {
-            roomString += `room #${i}${roomName}: ${roomLength}/${roomMaxUsers}\n`
+            roomString += `room #${i} ${roomName}: ${roomLength}/${roomMaxUsers}\n`
         }
     }
     console.log(roomString)

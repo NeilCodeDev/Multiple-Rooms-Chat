@@ -1,5 +1,7 @@
 import net from 'net'
 
+import { validateRoomCommand } from './utils/checkUserInput.js'
+
 import 'dotenv/config'
 
 const PORT = process.env.PORT || 9000
@@ -19,17 +21,22 @@ client.on("data", (data) => {
 
 process.stdin.on("data", (data) => {
     if (data.toString().trim().startsWith("/create")) {
-        const userInput = data.toString().trim().split("|")
+        try {
+            const userInput = data.toString().trim().split("|")
 
-        const commandMsg = {
-            type: "CREATE_ROOM",
-            roomName: userInput[1].trim(),
-            maxUsers: userInput[2]
+            const commandMsg = {
+                type: "CREATE_ROOM",
+                roomName: userInput[1].trim(),
+                maxUsers: userInput[2]
+            }
 
+            if (validateRoomCommand(commandMsg)) return console.log("Error client: ", validateRoomCommand(commandMsg))
+            client.write(JSON.stringify(commandMsg))
+            return
+        } catch(error) {
+            console.error("Error: ", error.message)
+            return
         }
-
-        client.write(JSON.stringify(commandMsg))
-        return
     }
     client.write(data.toString())
 
