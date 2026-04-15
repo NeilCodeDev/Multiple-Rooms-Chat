@@ -1,4 +1,4 @@
-export default function checkUserInput(data, state, socket) {
+function checkUserInput(data, state, socket) {
     const msg = Number(data.toString().trim())
     if (Number.isNaN(msg) ||
         msg > Object.keys(state.roomsObj).length ||
@@ -11,3 +11,17 @@ export default function checkUserInput(data, state, socket) {
         return true
     }
 }
+
+function validateRoomCommand(userInput) {
+    if (isNaN(Number(userInput.maxUsers))) {
+        return "the max user is NaN"
+    } 
+
+    if (Number(userInput.maxUsers) < 2) {
+        return "the max user number is less than minimum 2"
+    }
+
+    return null
+}
+
+export { checkUserInput, validateRoomCommand }

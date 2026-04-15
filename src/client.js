@@ -18,6 +18,19 @@ client.on("data", (data) => {
 })
 
 process.stdin.on("data", (data) => {
+    if (data.toString().trim().startsWith("/create")) {
+        const userInput = data.toString().trim().split("|")
+
+        const commandMsg = {
+            type: "CREATE_ROOM",
+            roomName: userInput[1].trim(),
+            maxUsers: userInput[2]
+
+        }
+
+        client.write(JSON.stringify(commandMsg))
+        return
+    }
     client.write(data.toString())
 
 })
