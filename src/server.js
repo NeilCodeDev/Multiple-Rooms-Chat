@@ -72,7 +72,7 @@ const server = net.createServer((socket) => {
             if (JSON.parse(data.toString()).type === "CREATE_ROOM") {
                 try {
                     const userInput = JSON.parse(data.toString())
-
+ 
                     if (validateRoomCommand(userInput)) return socket.write(`Error server: ${validateRoomCommand(userInput)}`)
 
                     const roomNumber = Object.keys(state.roomsObj).length + 1
