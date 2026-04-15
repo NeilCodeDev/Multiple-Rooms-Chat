@@ -51,6 +51,12 @@ const server = net.createServer((socket) => {
 
 
     socket.on("data", (data) => {
+        //help command
+        if (data.toString().trim() === "/help"){
+            socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room`)
+            return
+        }
+
         if (!socket.room) {
             // create room command
             if (JSON.parse(data.toString()).type === "CREATE_ROOM") {
@@ -66,7 +72,6 @@ const server = net.createServer((socket) => {
                         roomUsersArray: []
                     }
                     socket.write("Room was created!")
-                    //////////////////////////////////////////////////////////////////////////////// ------
                     renderRoomsLobby()
                     return
 
