@@ -40,8 +40,11 @@ renderRooms(state)
 
 const server = net.createServer((socket) => {
     const uuid = uuidv4();
+    // set user info
     socket.id = uuid
-    console.log("client joined")
+    socket.username = `unnamed#${uuid.slice(0, 3)}`
+
+    console.log("client joined: ", socket.username)
 
     state.userGlobalArray.push(socket)
     console.log(state.userGlobalArray.length)
@@ -51,9 +54,16 @@ const server = net.createServer((socket) => {
 
 
     socket.on("data", (data) => {
+        const userMsg = data.toString().trim()
         //help command
-        if (data.toString().trim() === "/help"){
-            socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room`)
+        if (userMsg === "/help"){
+            socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username`)
+            return
+        }
+
+        if (userMsg.startsWith("/username")) {
+            const username = userMsg.split(" ")[1]
+            socket.username = username
             return
         }
 
@@ -122,7 +132,7 @@ const server = net.createServer((socket) => {
             const room = socket.room.roomUsersArray
             room.forEach(client => {
                 if (client === socket) return
-                client.write("user: " + msg)
+                client.write(`${socket.username}: ` + msg)
             });
         }
     })
