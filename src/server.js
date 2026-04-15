@@ -17,6 +17,14 @@ let state = {
 }
 
 
+function renderRoomsLobby() {
+    state.userGlobalArray.forEach((client) => {
+        if (client.room) return
+        client.write(renderRooms(state))
+    })
+}
+
+
 for (let i = 1; i < defaultRoomsNumber + 1; i++) {
     state.roomsObj[`room${i}`] = {
         maxUsers: defaultRoomSize,
@@ -58,7 +66,8 @@ const server = net.createServer((socket) => {
                         roomUsersArray: []
                     }
                     socket.write("Room was created!")
-
+                    //////////////////////////////////////////////////////////////////////////////// ------
+                    renderRoomsLobby()
                     return
 
                 } catch(error) {
@@ -66,7 +75,6 @@ const server = net.createServer((socket) => {
                 }
 
             }
-
 
             if (!checkUserInput(data, state, socket)) return
             const userData = data.toString().trim()
@@ -100,10 +108,7 @@ const server = net.createServer((socket) => {
                     })
                     socket.room = undefined
 
-                    state.userGlobalArray.forEach((client) => {
-                        if (client.room) return
-                        client.write(renderRooms(state))
-                    })
+                renderRoomsLobby()
 
                 }
                 return
