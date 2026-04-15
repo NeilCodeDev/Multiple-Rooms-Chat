@@ -78,7 +78,15 @@ const server = net.createServer((socket) => {
 
         if (!socket.room) {
             // create room command
-            if (JSON.parse(data.toString()).type === "CREATE_ROOM") {
+            let parsedData;
+            try {
+                parsedData = JSON.parse(data.toString())
+            } catch(error) {
+                console.error(error.message)
+            }
+
+            if (parsedData && parsedData.type === "CREATE_ROOM") {
+
                 try {
                     const userInput = JSON.parse(data.toString())
  
@@ -129,7 +137,7 @@ const server = net.createServer((socket) => {
             const msg = data.toString().trim()
             if (msg === "/leave") {
                 if (socket.room) {
-                    sameRoomMessage(socket, " left")
+                    //sameRoomMessage(socket, " left")
 
                     socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
                         return client !== socket
@@ -140,8 +148,8 @@ const server = net.createServer((socket) => {
                 }
                 return
             }
-
-            sameRoomMessage(socket, ": " + msg)
+            
+            //sameRoomMessage(socket, ": " + msg)
         }
     })
 
