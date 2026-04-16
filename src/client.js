@@ -31,13 +31,13 @@ process.stdin.on("data", (data) => {
             }
 
             if (validateRoomCommand(commandMsg)) return console.log("Error client: ", validateRoomCommand(commandMsg))
-            client.write(JSON.stringify(commandMsg))
+            client.write(JSON.stringify(commandMsg) + "\n")
             return
         } catch(error) {
             console.error("Error: ", error.message)
             return
         }
     }
-    client.write(data.toString())
+    client.write(data.toString() + "\n")
 
 })

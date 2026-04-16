@@ -25,6 +25,7 @@ function renderRoomsLobby() {
 }
 
 function sameRoomMessage(socket, message) {
+    if (!socket.room || !socket.room.roomUsersArray) return
     const room = socket.room.roomUsersArray
 
     room.forEach(client => {
@@ -61,95 +62,99 @@ const server = net.createServer((socket) => {
 
     socket.write(renderRooms(state))
 
-
+    let buffer = ''
     socket.on("data", (data) => {
-        const userMsg = data.toString().trim()
-        //help command
-        if (userMsg === "/help"){
-            socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username`)
-            return
-        }
+        const userMsg = data.toString()
+        buffer += userMsg;
+        while (buffer.includes("\n")) {
+            const boundary = buffer.indexOf("\n")
+            let bufferedData = buffer.slice(0, boundary).trim()
+            buffer = buffer.slice(boundary + 1)
+        
+                //help command
+                if (bufferedData === "/help"){
+                    socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username`)
+                    continue
+                }
 
-        if (userMsg.startsWith("/username")) {
-            const username = userMsg.split(" ")[1]
-            socket.username = username
-            return
-        }
+                if (bufferedData.startsWith("/username")) {
+                    const username = bufferedData.split(" ")[1]
+                    socket.username = username
+                    continue
+                }
 
-        if (!socket.room) {
-            // create room command
-            let parsedData;
-            try {
-                parsedData = JSON.parse(data.toString())
-            } catch(error) {
-                console.error(error.message)
-            }
-
-            if (parsedData && parsedData.type === "CREATE_ROOM") {
-
-                try {
-                    const userInput = JSON.parse(data.toString())
- 
-                    if (validateRoomCommand(userInput)) return socket.write(`Error server: ${validateRoomCommand(userInput)}`)
-
-                    const roomNumber = Object.keys(state.roomsObj).length + 1
-                    state.roomsObj[`room${roomNumber}`] = {
-                        maxUsers: Number(userInput.maxUsers),
-                        roomName: userInput.roomName,
-                        roomUsersArray: []
+                if (!socket.room) {
+                    // create room command
+                    let parsedData;
+                    try {
+                        parsedData = JSON.parse(bufferedData)
+                    } catch(error) {
+                        console.error(error.message)
                     }
-                    socket.write("Room was created!")
-                    renderRoomsLobby()
-                    return
 
-                } catch(error) {
-                    console.error("Error: ", error.message)
-                }
+                    if (parsedData && parsedData.type === "CREATE_ROOM") {
 
-            }
+                        try {
+        
+                            if (validateRoomCommand(parsedData)) return socket.write(`Error server: ${validateRoomCommand(parsedData)}`)
 
-            if (!checkUserInput(data, state, socket)) return
-            const userData = data.toString().trim()
-            const userRoom = state.roomsObj[`room${userData}`]
+                            const roomNumber = Object.keys(state.roomsObj).length + 1
+                            state.roomsObj[`room${roomNumber}`] = {
+                                maxUsers: Number(parsedData.maxUsers),
+                                roomName: parsedData.roomName,
+                                roomUsersArray: []
+                            }
+                            socket.write("Room was created!")
+                            renderRoomsLobby()
+                            continue
 
-            //check if room is full
-            if (userRoom.roomUsersArray.length >= userRoom.maxUsers) {
-                socket.write("\nThe room is full, try another one\n")
-                socket.write(renderRooms(state))
-                return
-            }
+                        } catch(error) {
+                            console.error("Error: ", error.message)
+                        }
 
-            socket.room = userRoom
-            userRoom.roomUsersArray.push(socket)
-            console.log(state.roomsObj)
+                    }
+
+                    if (!checkUserInput(bufferedData, state, socket)) continue
+                    const userRoom = state.roomsObj[`room${bufferedData}`]
+
+                    //check if room is full
+                    if (userRoom.roomUsersArray.length >= userRoom.maxUsers) {
+                        socket.write("\nThe room is full, try another one\n")
+                        socket.write(renderRooms(state))
+                        continue
+                    }
+
+                    socket.room = userRoom
+                    userRoom.roomUsersArray.push(socket)
+                    console.log(state.roomsObj)
 
 
-            state.userGlobalArray.forEach((client) => {
-                if (client.room) return
-                client.write(renderRooms(state))
-            })
-
-            socket.write("you joined: room " + userData)
-
-            sameRoomMessage(socket, " has joined!")
-
-        } else {
-            const msg = data.toString().trim()
-            if (msg === "/leave") {
-                if (socket.room) {
-                    //sameRoomMessage(socket, " left")
-
-                    socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
-                        return client !== socket
+                    state.userGlobalArray.forEach((client) => {
+                        if (client.room) return
+                        client.write(renderRooms(state))
                     })
-                    socket.room = undefined
 
-                renderRoomsLobby()
+                    socket.write("you joined: room " + bufferedData)
+
+                    sameRoomMessage(socket, " has joined!")
+
+                } else {
+                    if (bufferedData === "/leave") {
+                        if (socket.room) {
+                            //sameRoomMessage(socket, " left")
+
+                            socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
+                                return client !== socket
+                            })
+                            socket.room = undefined
+
+                        renderRoomsLobby()
+                        }
+                        continue
+                    }
+                    
+                    sameRoomMessage(socket, ": " + bufferedData)
                 }
-                return
-            }
-            
-            //sameRoomMessage(socket, ": " + msg)
         }
     })
 
