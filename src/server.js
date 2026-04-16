@@ -1,12 +1,12 @@
 import net from 'net'
 
 import 'dotenv/config'
-import { v4 as uuidv4 } from 'uuid';
 
 import configObject from './config.js';
 import {checkUserInput} from './utils/checkUserInput.js';
 import { validateRoomCommand } from './utils/checkUserInput.js';
 import renderRooms from './utils/renderRooms.js';
+import { initializeUser } from './logic/initializeUser.js';
 
 const PORT = process.env.PORT
 const { defaultRoomsNumber, defaultRoomSize } = configObject
@@ -42,24 +42,11 @@ for (let i = 1; i < defaultRoomsNumber + 1; i++) {
     }
 }
 
-console.log(state.roomsObj)
-
 // render rooms for user
 renderRooms(state)
 
-
 const server = net.createServer((socket) => {
-    const uuid = uuidv4();
-    // set user info
-    socket.id = uuid
-    socket.username = `unnamed#${uuid.slice(0, 3)}`
-    socket.created_rooms = []
-
-    console.log("client joined: ", socket.username)
-
-    state.userGlobalArray.push(socket)
-    console.log(state.userGlobalArray.length)
-    
+    initializeUser(socket, state)
 
     socket.write(renderRooms(state))
 
@@ -112,7 +99,6 @@ const server = net.createServer((socket) => {
                                 renderRoomsLobby()
                             }
                         })
-
                         continue
                     }
                     
@@ -149,6 +135,7 @@ const server = net.createServer((socket) => {
                         }
 
                     }
+
                     if (!checkUserInput(bufferedData, state, socket)) continue
                     const userRoom = state.roomsObj[`room${bufferedData}`]
 
