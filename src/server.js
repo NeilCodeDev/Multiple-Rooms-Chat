@@ -53,6 +53,7 @@ const server = net.createServer((socket) => {
     // set user info
     socket.id = uuid
     socket.username = `unnamed#${uuid.slice(0, 3)}`
+    socket.created_rooms = []
 
     console.log("client joined: ", socket.username)
 
@@ -74,7 +75,7 @@ const server = net.createServer((socket) => {
 
                 //help command
                 if (bufferedData === "/help"){
-                    socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username`)
+                    socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username\n /delete room | (room name)`)
                     continue
                 }
 
@@ -86,7 +87,34 @@ const server = net.createServer((socket) => {
 
 
                 if (!socket.room) {
-                // delete room logic here
+                    // delete room coomand
+                    if (bufferedData.startsWith("/delete room")) {
+                        console.log("Request: ",state.roomsObj)
+
+                        const room = bufferedData.split("|")[1].trim()
+
+                        const isCreator = socket.created_rooms.includes(room) ? true : false
+                        if (!isCreator) continue
+                        
+                        Object.keys(state.roomsObj).forEach((item) => {
+                            if (state.roomsObj[item].roomName && state.roomsObj[item].roomName === room) {
+                                // kick all users in same room
+                                const roomArray = state.roomsObj[item].roomUsersArray
+                                if (roomArray.length > 0) {
+                                    roomArray.forEach((user) => {
+                                        user.write("This room was deleted...")
+                                        user.room = undefined
+                                    })
+                                }
+                                
+                                delete state.roomsObj[item]
+                                
+                                renderRoomsLobby()
+                            }
+                        })
+
+                        continue
+                    }
                     
                     // create room command
                     let parsedData;
@@ -111,6 +139,7 @@ const server = net.createServer((socket) => {
                                 roomName: parsedData.roomName,
                                 roomUsersArray: []
                             }
+                            socket.created_rooms.push(parsedData.roomName)
                             socket.write("Room was created!")
                             renderRoomsLobby()
                             continue
