@@ -70,7 +70,8 @@ const server = net.createServer((socket) => {
             const boundary = buffer.indexOf("\n")
             let bufferedData = buffer.slice(0, boundary).trim()
             buffer = buffer.slice(boundary + 1)
-        
+            if (!bufferedData || bufferedData === "") continue
+
                 //help command
                 if (bufferedData === "/help"){
                     socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username`)
@@ -83,7 +84,10 @@ const server = net.createServer((socket) => {
                     continue
                 }
 
+
                 if (!socket.room) {
+                // delete room logic here
+                    
                     // create room command
                     let parsedData;
                     try {
@@ -92,11 +96,14 @@ const server = net.createServer((socket) => {
                         console.error(error.message)
                     }
 
-                    if (parsedData && parsedData.type === "CREATE_ROOM") {
 
+                    if (parsedData && parsedData.type === "CREATE_ROOM") {
                         try {
         
-                            if (validateRoomCommand(parsedData)) return socket.write(`Error server: ${validateRoomCommand(parsedData)}`)
+                            if (validateRoomCommand(parsedData)) {
+                                socket.write(`Error server: ${validateRoomCommand(parsedData)}`)
+                                continue
+                            }
 
                             const roomNumber = Object.keys(state.roomsObj).length + 1
                             state.roomsObj[`room${roomNumber}`] = {
@@ -113,7 +120,6 @@ const server = net.createServer((socket) => {
                         }
 
                     }
-
                     if (!checkUserInput(bufferedData, state, socket)) continue
                     const userRoom = state.roomsObj[`room${bufferedData}`]
 
