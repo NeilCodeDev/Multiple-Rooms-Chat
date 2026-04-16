@@ -6,6 +6,7 @@ export function initializeUser(socket, state) {
     // set user info
     socket.id = uuid
     socket.username = `unnamed#${uuid.slice(0, 3)}`
+    socket.roomUsername = socket.username
     socket.created_rooms = []
     console.log("client joined: ", socket.username)
     state.userGlobalArray.push(socket)

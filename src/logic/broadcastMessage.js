@@ -13,7 +13,7 @@ function sameRoomMessage(socket, message) {
 
     room.forEach(client => {
         if (client === socket) return
-        client.write(`${socket.username}${message}`)
+        client.write(`${socket.roomUsername}${message}`)
     });
 }
 

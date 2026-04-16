@@ -14,6 +14,7 @@ export function commandHandler(socket, bufferedData, state) {
     if (bufferedData.startsWith("/username")) {
         const username = bufferedData.split(" ")[1]
         socket.username = username
+        socket.roomUsername = socket.username
         return
     }
 
@@ -80,6 +81,7 @@ export function commandHandler(socket, bufferedData, state) {
     
         }
     
+
         if (!checkUserInput(bufferedData, state, socket)) return
         const userRoom = state.roomsObj[`room${bufferedData}`]
     
@@ -92,16 +94,20 @@ export function commandHandler(socket, bufferedData, state) {
     
         socket.room = userRoom
         userRoom.roomUsersArray.push(socket)
-        console.log(state.roomsObj)
-    
+
+        // implement give room owner prefix ---
+        if (socket.room && socket.created_rooms.includes(userRoom.roomName)) {
+            console.log("you are the owner")
+            socket.roomUsername = `${socket.username} (Owner)`
+        } else {
+            socket.roomUsername = socket.username
+        }
     
         state.userGlobalArray.forEach((client) => {
             if (client.room) return
             client.write(renderRooms(state))
         })
-    
         socket.write("you joined: room " + bufferedData)
-    
         sameRoomMessage(socket, " has joined!")
     
     } else {
