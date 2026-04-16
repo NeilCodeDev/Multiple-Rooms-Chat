@@ -5,7 +5,7 @@ import configObject from './config.js';
 import renderRooms from './utils/renderRooms.js';
 import { initializeUser } from './logic/initializeUser.js';
 import { commandHandler } from './logic/commandHandler.js';
-import { sameRoomMessage } from './logic/broadcastMessage.js';
+import { clearUser } from './logic/clearUser.js';
 
 const PORT = process.env.PORT
 const { defaultRoomsNumber, defaultRoomSize } = configObject
@@ -14,7 +14,6 @@ let state = {
     userGlobalArray: [],
     roomsObj: {}
 }
-
 
 for (let i = 1; i < defaultRoomsNumber + 1; i++) {
     state.roomsObj[`room${i}`] = {
@@ -42,8 +41,6 @@ const server = net.createServer((socket) => {
             if (!bufferedData || bufferedData === "") continue
 
             commandHandler(socket, bufferedData, state)
-
-                
         }
     })
 
@@ -52,22 +49,7 @@ const server = net.createServer((socket) => {
     })
     
     socket.on("close", () => {
-        //clear global array
-        if (socket.room) sameRoomMessage(socket, " left")
-
-        state.userGlobalArray = state.userGlobalArray.filter((client) => {
-            return client !== socket
-        })
-
-        // clear room array
-        if (socket.room) {
-            socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
-                return client !== socket
-            })
-        }
-
-        console.log("client disconnected: ", state.userGlobalArray.length)
-        renderRooms(state)
+        clearUser(socket, state)
     })
 })
 

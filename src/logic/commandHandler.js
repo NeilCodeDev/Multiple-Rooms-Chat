@@ -1,6 +1,7 @@
 import {checkUserInput} from '../utils/checkUserInput.js';
 import { validateRoomCommand } from '../utils/checkUserInput.js';
 import { renderRoomsLobby, sameRoomMessage } from '../logic/broadcastMessage.js';
+import renderRooms from '../utils/renderRooms.js';
 
 export function commandHandler(socket, bufferedData, state) {
     // help command
