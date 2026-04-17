@@ -2,41 +2,17 @@ import {checkUserInput} from '../utils/checkUserInput.js';
 import { validateRoomCommand } from '../utils/checkUserInput.js';
 import { renderRoomsLobby, sameRoomMessage } from '../logic/broadcastMessage.js';
 import renderRooms from '../utils/renderRooms.js';
-import { displayHelp, updateUsername } from '../logic/userActions.js'
+import { displayHelp, updateUsername } from './commands/global.js'
+import { deleteRoomCommand } from './commands/lobby.js';
 
 export function commandHandler(socket, bufferedData, state) {
     // global commands
     if (bufferedData === "/help") return displayHelp(socket)
     if (bufferedData.startsWith("/username")) return updateUsername(socket, bufferedData)
 
+    // lobby commands
     if (!socket.room) {
-        // delete room coomand
-        if (bufferedData.startsWith("/delete room")) {
-            console.log("Request: ",state.roomsObj)
-    
-            const room = bufferedData.split("|")[1].trim()
-    
-            const isCreator = socket.created_rooms.includes(room) ? true : false
-            if (!isCreator) return
-            
-            Object.keys(state.roomsObj).forEach((item) => {
-                if (state.roomsObj[item].roomName && state.roomsObj[item].roomName === room) {
-                    // kick all users in same room
-                    const roomArray = state.roomsObj[item].roomUsersArray
-                    if (roomArray.length > 0) {
-                        roomArray.forEach((user) => {
-                            user.write("This room was deleted...")
-                            user.room = undefined
-                        })
-                    }
-                    
-                    delete state.roomsObj[item]
-                    
-                    renderRoomsLobby(state)
-                }
-            })
-            return
-        }
+        if (bufferedData.startsWith("/delete room")) return deleteRoomCommand(socket, bufferedData, state)
         
         // create room command
         let parsedData;
