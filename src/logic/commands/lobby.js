@@ -28,5 +28,38 @@ function deleteRoomCommand(socket, bufferedData, state) {
     })
 }
 
+function createRoomCommand(socket, bufferedData, state) {
+    const roomNameData = bufferedData.split("|")[1]
+    const roomMaxUsersData = bufferedData.split("|")[2]
+    if (!roomNameData || !roomMaxUsersData) return socket.write("Wrong /create command input")
+    
+    let isValidRoomName = false
+    const roomName = roomNameData.trim()
+    const roomMaxUsers = roomMaxUsersData.trim()
 
-export { deleteRoomCommand }
+
+    //check for same room name
+    Object.keys(state.roomsObj).forEach((item) => {
+        if (state.roomsObj[item].roomName === roomName) {
+            isValidRoomName = false
+            return socket.write("this room name already exists, try different one.")
+        } else {
+            isValidRoomName = true
+        }
+    })
+
+    if (!isValidRoomName) return
+    
+    const roomNumber = Object.keys(state.roomsObj).length + 1
+    state.roomsObj[`room${roomNumber}`] = {
+        maxUsers: Number(roomMaxUsers),
+        roomName: roomName,
+        roomUsersArray: []
+    }
+    socket.created_rooms.push(roomName)
+    socket.write("Room was created!")
+    renderRoomsLobby(state)
+}
+
+
+export { deleteRoomCommand, createRoomCommand }
