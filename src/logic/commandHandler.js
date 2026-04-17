@@ -2,21 +2,12 @@ import {checkUserInput} from '../utils/checkUserInput.js';
 import { validateRoomCommand } from '../utils/checkUserInput.js';
 import { renderRoomsLobby, sameRoomMessage } from '../logic/broadcastMessage.js';
 import renderRooms from '../utils/renderRooms.js';
+import { displayHelp, updateUsername } from '../logic/userActions.js'
 
 export function commandHandler(socket, bufferedData, state) {
-    // help command
-    if (bufferedData === "/help"){
-        socket.write(`\nCommands Console: \n /help - all commands listed\n /leave - leave a room\n /create | room name | max users number (e.g. 5) - create a room\n /username (input) - set custom username\n /delete room | (room name)`)
-        return
-    }
-
-    // username command
-    if (bufferedData.startsWith("/username")) {
-        const username = bufferedData.split(" ")[1]
-        socket.username = username
-        socket.roomUsername = socket.username
-        return
-    }
+    // global commands
+    if (bufferedData === "/help") return displayHelp(socket)
+    if (bufferedData.startsWith("/username")) return updateUsername(socket, bufferedData)
 
     if (!socket.room) {
         // delete room coomand
