@@ -1,5 +1,4 @@
 import {checkUserInput} from '../utils/checkUserInput.js';
-import { validateRoomCommand } from '../utils/checkUserInput.js';
 import { renderRoomsLobby, sameRoomMessage } from '../logic/broadcastMessage.js';
 import renderRooms from '../utils/renderRooms.js';
 import { displayHelp, updateUsername } from './commands/global.js'
@@ -15,53 +14,43 @@ export function commandHandler(socket, bufferedData, state) {
         if (bufferedData.startsWith("/delete room")) return deleteRoomCommand(socket, bufferedData, state)
         
         // create room command
-        let parsedData;
-        try {
-            parsedData = JSON.parse(bufferedData)
-        } catch(error) {
-            console.error(error.message)
-        }
-    
-    
-        if (parsedData && parsedData.type === "CREATE_ROOM") {
-            try {
-                if (validateRoomCommand(parsedData, state)) {
-                    socket.write(`Error server: ${validateRoomCommand(parsedData)}`)
-                    return
+        if (bufferedData.startsWith("/create")) {
+            const roomNameData = bufferedData.split("|")[1]
+            const roomMaxUsersData = bufferedData.split("|")[2]
+            if (!roomNameData || !roomMaxUsersData) return socket.write("Wrong /create command input")
+            
+            let isValidRoomName = false
+            const roomName = roomNameData.trim()
+            const roomMaxUsers = roomMaxUsersData.trim()
+
+
+            //check for same room name
+            Object.keys(state.roomsObj).forEach((item) => {
+                if (state.roomsObj[item].roomName === roomName) {
+                    isValidRoomName = false
+                    return socket.write("this room name already exists, try different one.")
+                } else {
+                    isValidRoomName = true
                 }
+            })
 
-                let isValidRoomName = false
-
-                //check for same room name
-                Object.keys(state.roomsObj).forEach((item) => {
-                    if (state.roomsObj[item].roomName === parsedData.roomName) {
-                        isValidRoomName = false
-                        return socket.write("this room name already exists, try different one.")
-                    } else {
-                        isValidRoomName = true
-                    }
-                })
-
-                if (!isValidRoomName) return
-    
-                const roomNumber = Object.keys(state.roomsObj).length + 1
-                state.roomsObj[`room${roomNumber}`] = {
-                    maxUsers: Number(parsedData.maxUsers),
-                    roomName: parsedData.roomName,
-                    roomUsersArray: []
-                }
-                socket.created_rooms.push(parsedData.roomName)
-                socket.write("Room was created!")
-                renderRoomsLobby(state)
-                return
-    
-            } catch(error) {
-                console.error("Error: ", error.message)
+            if (!isValidRoomName) return
+        
+            const roomNumber = Object.keys(state.roomsObj).length + 1
+            state.roomsObj[`room${roomNumber}`] = {
+                maxUsers: Number(roomMaxUsers),
+                roomName: roomName,
+                roomUsersArray: []
             }
-    
+            socket.created_rooms.push(roomName)
+            socket.write("Room was created!")
+            renderRoomsLobby(state)
+
+            return
         }
     
-
+    
+        // JOIN ROOM
         if (!checkUserInput(bufferedData, state, socket)) return
         const userRoom = state.roomsObj[`room${bufferedData}`]
     

@@ -12,17 +12,5 @@ function checkUserInput(bufferedData, state, socket) {
     }
 }
 
-function validateRoomCommand(userInput, state) {
-    console.log("ValidiationRoom: ", state)
-    if (isNaN(Number(userInput.maxUsers))) {
-        return "the max user is NaN"
-    } 
 
-    if (Number(userInput.maxUsers) < 2) {
-        return "the max user number is less than minimum 2"
-    }
-
-    return null
-}
-
-export { checkUserInput, validateRoomCommand }
+export { checkUserInput }
