@@ -3,6 +3,7 @@ A TCP chat that allows people to join different rooms and message each other
 
 ## Project Goals
 - learn dynamic server state-management
+- improve structure of code (use modular functions, clean logic separation)
 
 ## Tech Stack
 - **Backend**: Node.js
@@ -17,7 +18,9 @@ A TCP chat that allows people to join different rooms and message each other
 - [X] add /username command to setup custom username
 - [X] add notifications inside room who joined / left
 - [X] implement data buffer for safe tcp data transfer
-- [ ] users can set a password for own created rooms and delete rooms
-- [ ] add prefix owner to creator of room, let owner have admin rights e.g kick, ban
+- [X] creators can delete rooms
+- [X] add prefix owner to creator of room, let owners kick users
+- [ ] users can set a password for own created rooms
+- [ ] creators of rooms can ban users permanently from reaching their room
 - [ ] performance improvement (Garbage collection - rooms get deleted after time of inactivity, users get disconnected after time of inactivity)
 - [ ] store rooms and history in databank
