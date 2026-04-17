@@ -58,11 +58,24 @@ export function commandHandler(socket, bufferedData, state) {
     
         if (parsedData && parsedData.type === "CREATE_ROOM") {
             try {
-    
-                if (validateRoomCommand(parsedData)) {
+                if (validateRoomCommand(parsedData, state)) {
                     socket.write(`Error server: ${validateRoomCommand(parsedData)}`)
                     return
                 }
+
+                let isValidRoomName = false
+
+                //check for same room name
+                Object.keys(state.roomsObj).forEach((item) => {
+                    if (state.roomsObj[item].roomName === parsedData.roomName) {
+                        isValidRoomName = false
+                        return socket.write("this room name already exists, try different one.")
+                    } else {
+                        isValidRoomName = true
+                    }
+                })
+
+                if (!isValidRoomName) return
     
                 const roomNumber = Object.keys(state.roomsObj).length + 1
                 state.roomsObj[`room${roomNumber}`] = {
@@ -97,12 +110,13 @@ export function commandHandler(socket, bufferedData, state) {
         socket.write(renderRooms(state))
 
 
-        // implement give room owner prefix ---
+        // give owner prefix
         if (socket.room && socket.created_rooms.includes(userRoom.roomName)) {
-            console.log("you are the owner")
             socket.roomUsername = `${socket.username} (Owner)`
+            socket.isOwner = true
         } else {
             socket.roomUsername = socket.username
+            socket.isOwner = false
         }
     
         state.userGlobalArray.forEach((client) => {
@@ -125,6 +139,29 @@ export function commandHandler(socket, bufferedData, state) {
             renderRoomsLobby(state)
             }
             return
+        }
+
+        if (bufferedData.startsWith("/kick")) {
+            if (!socket.isOwner) return socket.write("you aren't the owner, cant use this command!")
+            const kickName = bufferedData.split(" ")[1]
+            if (!kickName) return socket.write("wrong kick command")
+
+            const room = socket.room.roomUsersArray
+
+            room.forEach((user) => {
+                if (kickName.trim() !== user.username) return
+                if (socket.username === kickName.trim()) return socket.write("Owners can't kick themselves")
+
+                socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
+                    return client !== user
+                })
+                sameRoomMessage(user, " was kicked")
+                user.room = undefined
+                user.write("you were kicked")
+                renderRoomsLobby(state)
+
+            })
+
         }
         
         sameRoomMessage(socket, ": " + bufferedData)
