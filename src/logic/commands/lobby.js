@@ -1,6 +1,8 @@
-import { renderRoomsLobby } from "../broadcastMessage.js"
+import { renderRoomsLobby, sameRoomMessage } from "../broadcastMessage.js"
+import { checkUserInput } from "../../utils/checkUserInput.js"
+import renderRooms from "../../utils/renderRooms.js"
 
-// delete room
+// DELETE
 function deleteRoomCommand(socket, bufferedData, state) {
     const roomData = bufferedData.split("|")[1]
 
@@ -28,6 +30,7 @@ function deleteRoomCommand(socket, bufferedData, state) {
     })
 }
 
+// CREATE
 function createRoomCommand(socket, bufferedData, state) {
     const roomNameData = bufferedData.split("|")[1]
     const roomMaxUsersData = bufferedData.split("|")[2]
@@ -61,5 +64,43 @@ function createRoomCommand(socket, bufferedData, state) {
     renderRoomsLobby(state)
 }
 
+// JOIN
+function joinRoomCommand(socket, bufferedData, state) {
+    const roomInputData = bufferedData.split(" ")[1]
+    if (!roomInputData) return socket.write("Wrong /join command.")
+    const roomInput = roomInputData.trim()
+    console.log("rooMinpout: ", roomInput)
 
-export { deleteRoomCommand, createRoomCommand }
+    if (!checkUserInput(roomInput, state, socket)) return
+    const userRoom = state.roomsObj[`room${roomInput}`]
+
+    //check if room is full
+    if (userRoom.roomUsersArray.length >= userRoom.maxUsers) {
+        socket.write("\nThe room is full, try another one\n")
+        socket.write(renderRooms(state))
+        return
+    }
+    socket.room = userRoom
+    userRoom.roomUsersArray.push(socket)
+    socket.write(renderRooms(state))
+
+    // give owner prefix
+    if (socket.room && socket.created_rooms.includes(userRoom.roomName)) {
+        socket.roomUsername = `${socket.username} (Owner)`
+        socket.isOwner = true
+    } else {
+        socket.roomUsername = socket.username
+        socket.isOwner = false
+    }
+    
+    state.userGlobalArray.forEach((client) => {
+        if (client.room) return
+        client.write(renderRooms(state))
+    })
+    
+    socket.write("you joined: room " + roomInput)
+    sameRoomMessage(socket, " has joined!")
+}
+
+
+export { deleteRoomCommand, createRoomCommand, joinRoomCommand }

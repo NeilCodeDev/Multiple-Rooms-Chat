@@ -1,8 +1,6 @@
-import {checkUserInput} from '../utils/checkUserInput.js';
 import { renderRoomsLobby, sameRoomMessage } from '../logic/broadcastMessage.js';
-import renderRooms from '../utils/renderRooms.js';
 import { displayHelp, updateUsername } from './commands/global.js'
-import { deleteRoomCommand, createRoomCommand } from './commands/lobby.js';
+import { deleteRoomCommand, createRoomCommand, joinRoomCommand } from './commands/lobby.js';
 
 export function commandHandler(socket, bufferedData, state) {
     // global commands
@@ -12,42 +10,9 @@ export function commandHandler(socket, bufferedData, state) {
     // lobby commands
     if (!socket.room) {
         if (bufferedData.startsWith("/delete room")) return deleteRoomCommand(socket, bufferedData, state)
-        
-        // create room command
         if (bufferedData.startsWith("/create")) return createRoomCommand(socket, bufferedData, state)
-    
-        // JOIN ROOM
-        if (!checkUserInput(bufferedData, state, socket)) return
-        const userRoom = state.roomsObj[`room${bufferedData}`]
-    
-        //check if room is full
-        if (userRoom.roomUsersArray.length >= userRoom.maxUsers) {
-            socket.write("\nThe room is full, try another one\n")
-            socket.write(renderRooms(state))
-            return
-        }
-    
-        socket.room = userRoom
-        userRoom.roomUsersArray.push(socket)
-        socket.write(renderRooms(state))
+        if (bufferedData.startsWith("/join")) return joinRoomCommand(socket, bufferedData, state)
 
-
-        // give owner prefix
-        if (socket.room && socket.created_rooms.includes(userRoom.roomName)) {
-            socket.roomUsername = `${socket.username} (Owner)`
-            socket.isOwner = true
-        } else {
-            socket.roomUsername = socket.username
-            socket.isOwner = false
-        }
-    
-        state.userGlobalArray.forEach((client) => {
-            if (client.room) return
-            client.write(renderRooms(state))
-        })
-        socket.write("you joined: room " + bufferedData)
-        sameRoomMessage(socket, " has joined!")
-    
     } else {
         if (bufferedData === "/leave") {
             if (socket.room) {
