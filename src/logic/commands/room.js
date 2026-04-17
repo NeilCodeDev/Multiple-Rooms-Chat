@@ -8,7 +8,6 @@ function leaveRoomCommand(socket, state) {
             return client !== socket
         })
         socket.room = undefined
-
         renderRoomsLobby(state)
     }
 }
@@ -18,21 +17,24 @@ function kickCommand(socket, bufferedData, state) {
     if (!socket.isOwner) return socket.write("you aren't the owner, cant use this command!")
     const kickName = bufferedData.split(" ")[1]
     if (!kickName) return socket.write("wrong kick command")
-
     const room = socket.room.roomUsersArray
-
-    room.forEach((user) => {
-        if (kickName.trim() !== user.username) return
-        if (socket.username === kickName.trim()) return socket.write("Owners can't kick themselves")
-
-        socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
-            return client !== user
-        })
-        sameRoomMessage(user, " was kicked")
-        user.room = undefined
-        user.write("you were kicked")
-        renderRoomsLobby(state)
+    if (!room) return
+    
+    const userToKick = room.find((user) => {
+        if (user.username === kickName.trim()) return true
     })
+
+    if (!userToKick) return socket.write("No such user was found.")
+    if (socket.username === kickName.trim()) return socket.write("Owners can't kick themselves")
+
+    socket.room.roomUsersArray = socket.room.roomUsersArray.filter((client) => {
+        return client !== userToKick
+    })
+
+    sameRoomMessage(userToKick, " was kicked")
+    userToKick.room = undefined
+    userToKick.write("you were kicked")
+    renderRoomsLobby(state)
 }
 
 export { leaveRoomCommand, kickCommand }
