@@ -94,6 +94,8 @@ export function commandHandler(socket, bufferedData, state) {
     
         socket.room = userRoom
         userRoom.roomUsersArray.push(socket)
+        socket.write(renderRooms(state))
+
 
         // implement give room owner prefix ---
         if (socket.room && socket.created_rooms.includes(userRoom.roomName)) {
